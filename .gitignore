@@ -1,0 +1,6 @@
+# .gitignore
+envs/
+.idea/
+.ipynb_checkpoints/
+Task3/*.MOV
+Task3/*.mp4

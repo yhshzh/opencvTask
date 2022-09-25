@@ -4,15 +4,19 @@ import numpy as np
 def RectangleDetection(img):
     contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
     for object in contours:
-        area = cv2.contourArea(object)
+        # area = cv2.contourArea(object)
         perimeter = cv2.arcLength(object, True)
-        approx = cv2.approxPolyDP(object, 0.02*perimeter, True)
+        approx = cv2.approxPolyDP(object, 0.02*perimeter, True) # 最优拟合多边形，用于计算角点数量获取矩形
         CornerNum = len (approx) # 角点数量，用于判断形状
 
         x, y, w, h = cv2.boundingRect(approx) # x, y, w, h分别为矩形的坐标值和宽度，高度
+        rect = cv2.minAreaRect(approx)
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)
 
         if CornerNum == 4:
-            cv2.rectangle(imgCopy, (x-5, y-5), (x+w+5, y+h+5), (0, 255, 255), 2) # 标注矩形位置
+            # cv2.rectangle(imgCopy, (x-5, y-5), (x+w+5, y+h+5), (0, 255, 255), 2) # 标注矩形位置
+            cv2.drawContours(imgCopy, [box], 0, (0, 255, 255), 2)
             cv2.putText(imgCopy, "Rectangle", (x+w//2, y+h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1) 
 
 
