@@ -24,7 +24,7 @@ def detect_circle_demo(image, img_depth, imgOut):
             cv2.circle(imgOut, (i[0], i[1]), 2, (255, 0, 0), 2)  # 圆心
             if i[0] >= 480 or i[1] >= 640:
                 continue
-            Dis.append(img_depth[i[0], i[1]]/10)
+            Dis.append(img_depth[i[0], i[1]])
             cv2.putText(imgOut, "Distance:" + str(img_depth[i[0], i[1]]/10) + "cm", (i[0], i[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                         [255, 0, 255])
         if not len(Dis) == 0:
@@ -33,7 +33,7 @@ def detect_circle_demo(image, img_depth, imgOut):
             #print(img_depth[circles[0, :][p][0], circles[0, :][p][1]])
             cv2.putText(imgOut, "TheNearest", (circles[0, :][p][0], circles[0, :][p][1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                         [255, 255, 255])
-            return min(Dis)*10
+            return min(Dis)
 
 
 def initCapture(_W, _H):
@@ -127,13 +127,21 @@ def getMask(_imgBGR):
     return _mask_0 + _mask_1
 
 
+# def writeDis(_minDis, _serial1, _serial2):
+#     if _serial2.readline()==('f'+'\n').encode():   
+#         if _minDis != None:
+#             _serial1.write((str(_minDis)+'\n').encode())
+#             print(_serial2.readline())
+#         else:
+#             _serial1.write((str(0)+'\n').encode())
+#             print(_serial2.readline())
 def writeDis(_minDis, _serial1, _serial2):
     if _serial2.readline()==('f'+'\n').encode():   
         if _minDis != None:
-            _serial1.write((str(_minDis)+'\n').encode())
+            _serial1.write((str('{:>4d}'.format(int(_minDis)))).encode())
             print(_serial2.readline())
         else:
-            _serial1.write((str(0)+'\n').encode())
+            _serial1.write((str(0)).encode())
             print(_serial2.readline())
 
 def getKey(_key, _serial):
