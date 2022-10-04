@@ -1,7 +1,10 @@
+from locale import strcoll
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-#       "/home/zheng/opencvTask/envs/lib/python3.6/site-packages"
+import serial
+import serial.tools.list_ports
+
 W = 640
 H = 480
 
@@ -71,6 +74,7 @@ def detect_circle_demo(image, img_depth, imgOut):
             #print(img_depth[circles[0, :][p][0], circles[0, :][p][1]])
             cv2.putText(imgOut, "TheNearest" , (circles[0, :][p][0], circles[0, :][p][1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     [255, 255, 255])
+            return min(Dis)*10
   
 
     # cv2.imshow("detect_circle_demo",image)
@@ -112,29 +116,22 @@ def led_practice(x_axis, y_axis):
         points = pc.calculate(depth_frame)  # 生成深度图的点云和纹理映射
         "points.get_vertices() 检索点云的顶点, asanyarray is similar with array"
         vtx = np.asanyarray(points.get_vertices())  # transfor into XYZ
-        # tex = np.asanyarray(points.get_texture_coordinates()) # texture map
 
-        # ??????? coordinate transform
-        # line by line
         i = W * y_axis + x_axis
 
-        # column by column
-        # i = H * x_axis + y_axis
+
 
         imgBGR = img_color.copy()
-#        print(imgBGR)
 
         cv2.circle(img_color, (x_axis, y_axis), 8, [255, 0, 255], thickness=-1)
 
         
-        # print(len(img_depth))
         cv2.putText(img_color, "Distance/cm:" + str(img_depth[x_axis, y_axis]/10), (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2,
                     [255, 0, 255])
         cv2.putText(img_color, "X:" + str(np.float64(vtx[i][0])), (80, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
         cv2.putText(img_color, "Y:" + str(np.float64(vtx[i][1])), (80, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
         cv2.putText(img_color, "Z:" + str(np.float64(vtx[i][2])), (80, 160), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
-#        print('Distance: ', img_depth[x_axis, y_axis] / 10)
-        
+
         
         imgHSV = cv2.cvtColor(imgBGR, cv2.COLOR_BGR2HSV)
         cv2.imshow('hsv', imgHSV)
@@ -149,7 +146,28 @@ def led_practice(x_axis, y_axis):
         mask = mask_0 + mask_1
 
         imgMask = cv2.bitwise_and(imgBGR, imgBGR, mask=mask) # 按位与运算，仅保留HSV [0, 43, 46]~[10, 255, 255]&[156, 43, 46]~[180, 255, 255]
-        detect_circle_demo(imgMask, img_depth, imgBGR)
+        minDis = detect_circle_demo(imgMask, img_depth, imgBGR)
+        
+        plist = list(serial.tools.list_ports.comports())
+
+
+        if len(plist) <= 0:
+            print("The Serial port can't find!")
+        else:
+            plist_0 = list(plist[0])
+            plist_1 = list(plist[1])
+            serialName1 = plist_0[0]
+            serialName2 = plist_1[0]
+            serialFd1 = serial.Serial(serialName1, 9600, timeout=0.5)
+            serialFd2 = serial.Serial(serialName2, 9600, timeout=0.5)
+        if minDis != None:
+            # print(minDis)
+            writeBit = serialFd1.write((str(minDis)+'\n').encode())
+            # serialFd1.write((str(0)+'\n').encode())
+            print(serialFd2.readline())
+        else:
+            serialFd1.write((str(0)+'\n').encode())
+            print(serialFd2.readline())
 
         cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
         cv2.imshow("Mask", imgMask)
@@ -158,8 +176,8 @@ def led_practice(x_axis, y_axis):
         cv2.imshow('BGR', imgBGR)
 
 
-        #cv2.imshow('depth_frame', img_color)
-        #cv2.imshow("dasdsadsa", img_depth)
+
+    
 
         key = cv2.waitKey(1)
         if key & 0xFF == ord("q"):

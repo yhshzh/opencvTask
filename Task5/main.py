@@ -8,7 +8,8 @@ import math
 def __line_magnitude(x1, y1, x2, y2):
     lineMagnitude = math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
     return lineMagnitude
- 
+
+
 def __point_to_line_distance(point, line):
     px, py = point
     x1, y1, x2, y2 = line
@@ -37,20 +38,21 @@ def __point_to_line_distance(point, line):
 point_1_X = 0
 point_1_Y = 0
 
-point_2_X = np.random.randint(100,200)
-point_2_Y = np.random.randint(300,400)
+point_2_X = np.random.randint(100, 200)
+point_2_Y = np.random.randint(300, 400)
 
-point_3_X = np.random.randint(200,300)
-point_3_Y = np.random.randint(100,200)
+point_3_X = np.random.randint(200, 300)
+point_3_Y = np.random.randint(100, 200)
 
-point_4_X = np.random.randint(500,600)
-point_4_Y = np.random.randint(200,300)
+point_4_X = np.random.randint(500, 600)
+point_4_Y = np.random.randint(200, 300)
 
 point_1 = (point_1_X, point_1_Y)
 point_2 = (point_2_X, point_2_Y)
 point_3 = (point_3_X, point_3_Y)
 point_4 = (point_4_X, point_4_Y)
-point_end = (600, point_3_Y + (point_4_Y-point_3_Y)/(point_4_X-point_3_X)*(600 - point_3_X))
+point_end = (600, point_3_Y + (point_4_Y-point_3_Y) /
+             (point_4_X-point_3_X)*(600 - point_3_X))
 
 img = np.zeros((400, 600, 3), dtype=np.uint8)
 img[:][:] = 255
@@ -78,35 +80,40 @@ lineEnd = point_3+point_end
 for x in range(point_1_X, point_2_X):
     for y in range(400):
         point = [x, y]
-        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(point, line2), __point_to_line_distance(point, line3))
-        line_y = point_1_Y + (point_2_Y-point_1_Y)/(point_2_X-point_1_X)*(x - point_1_X)
-        if y >= line_y :
+        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(
+            point, line2), __point_to_line_distance(point, line3))
+        line_y = point_1_Y + (point_2_Y-point_1_Y) / \
+            (point_2_X-point_1_X)*(x - point_1_X)
+        if y >= line_y:
             imgHSV[y][x] = [124, round(dis/500*255), 255]
-        if y < line_y :
+        if y < line_y:
             imgHSV[y][x] = [180, round(dis/500*255), 255]
 
 # line2
 for x in range(point_2_X, point_3_X):
     for y in range(400):
         point = [x, y]
-        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(point, line2), __point_to_line_distance(point, line3))
-        line_y = point_2_Y + (point_3_Y-point_2_Y)/(point_3_X-point_2_X)*(x - point_2_X)
-        if y >= line_y :
+        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(
+            point, line2), __point_to_line_distance(point, line3))
+        line_y = point_2_Y + (point_3_Y-point_2_Y) / \
+            (point_3_X-point_2_X)*(x - point_2_X)
+        if y >= line_y:
             imgHSV[y][x] = [124, round(dis/500*255), 255]
-        if y < line_y :
+        if y < line_y:
             imgHSV[y][x] = [180, round(dis/500*255), 255]
 
 # line3
 for x in range(point_3_X, 600):
     for y in range(400):
         point = [x, y]
-        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(point, line2), __point_to_line_distance(point, lineEnd))
-        line_y = point_3_Y + (point_4_Y-point_3_Y)/(point_4_X-point_3_X)*(x - point_3_X)
-        if y >= line_y :
+        dis = min(__point_to_line_distance(point, line1), __point_to_line_distance(
+            point, line2), __point_to_line_distance(point, lineEnd))
+        line_y = point_3_Y + (point_4_Y-point_3_Y) / \
+            (point_4_X-point_3_X)*(x - point_3_X)
+        if y >= line_y:
             imgHSV[y][x] = [124, round(dis/500*255), 255]
-        if y < line_y :
+        if y < line_y:
             imgHSV[y][x] = [180, round(dis/500*255), 255]
-
 
 
 imgBGR = cv2.cvtColor(imgHSV, cv2.COLOR_HSV2BGR)
