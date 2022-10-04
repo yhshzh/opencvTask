@@ -41,43 +41,34 @@ cap = cv2.VideoCapture(0)
 
 "the parameter is the monitoring position"
 
+
 def detect_circle_demo(image, img_depth, imgOut):
-    # dst = cv.bilateralFilter(image, 0, 150, 5)  #高斯双边模糊，不太好调节,霍夫噪声敏感，所以要先消除噪声
-    # cv.imshow("1",dst)
-    # dst = cv.pyrMeanShiftFiltering(image,5,100)  #均值迁移，EPT边缘保留滤波,霍夫噪声敏感，所以要先消除噪声
-    # cv.imshow("2", dst)
     kernel = np.ones((11, 11), np.uint8)
-    dst = cv2.GaussianBlur(image,(11,11),15) #使用高斯模糊，修改卷积核ksize也可以检测出来
-    # cv.imshow("3", dst)
-    gray = cv2.cvtColor(dst,cv2.COLOR_BGR2GRAY)
-    Mclose = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel)
+    dst = cv2.GaussianBlur(image, (11, 11), 15)
+    gray = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
+    Mclose = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
     cv2.imshow("Mclose", Mclose)
-    circles = cv2.HoughCircles(Mclose,cv2.HOUGH_GRADIENT,1,100,param1=50,param2=50,minRadius=20,maxRadius=0)
+    circles = cv2.HoughCircles(Mclose, cv2.HOUGH_GRADIENT, 1,
+                               100, param1=50, param2=50, minRadius=20, maxRadius=0)
     if not circles is None:
-        # print(circles[0][0][0])
         circles = np.uint16(np.around(circles))
-        # circles = np.where(circles[0][0][0]<480)
         p = 0
         Dis = []
-        #print(circles[0,:])
-        for i in circles[0,:]:
-            cv2.circle(imgOut,(i[0],i[1]),i[2],(0,0,255),2)
-            cv2.circle(imgOut,(i[0],i[1]),2,(255,0,0),2)   #圆心
-            if i[0]>=480 or i[1]>=640:
+        for i in circles[0, :]:
+            cv2.circle(imgOut, (i[0], i[1]), i[2], (0, 0, 255), 2)
+            cv2.circle(imgOut, (i[0], i[1]), 2, (255, 0, 0), 2)  # 圆心
+            if i[0] >= 480 or i[1] >= 640:
                 continue
             Dis.append(img_depth[i[0], i[1]]/10)
             cv2.putText(imgOut, "Distance:" + str(img_depth[i[0], i[1]]/10) + "cm", (i[0], i[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    [255, 0, 255])
+                        [255, 0, 255])
         if not len(Dis) == 0:
             p = Dis.index(min(Dis))
-        if not circles[0, :][p][0]>=480 or circles[0, :][p][1]>=640:
+        if not circles[0, :][p][0] >= 480 or circles[0, :][p][1] >= 640:
             #print(img_depth[circles[0, :][p][0], circles[0, :][p][1]])
-            cv2.putText(imgOut, "TheNearest" , (circles[0, :][p][0], circles[0, :][p][1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    [255, 255, 255])
+            cv2.putText(imgOut, "TheNearest", (circles[0, :][p][0], circles[0, :][p][1]+40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        [255, 255, 255])
             return min(Dis)*10
-  
-
-    # cv2.imshow("detect_circle_demo",image)
 
 
 def led_practice(x_axis, y_axis):
@@ -90,13 +81,13 @@ def led_practice(x_axis, y_axis):
         img_color = np.asanyarray(color_frame.get_data())  # 把图像像素转化为数组
         img_depth = np.asanyarray(depth_frame.get_data())  # 把图像像素转化为数组
 
-
         # self: pyrealsense2.pyrealsense2.stream_profile -> rs2::video_stream_profile
         # intrinsics 获取流配置文件的内在属性。
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
         color_intrin = color_frame.profile.as_video_stream_profile().intrinsics
         # get_extrinsics_to 获取两个配置文件之间的外部转换（代表物理传感器）
-        depth_to_color_extrin = depth_frame.profile.get_extrinsics_to(color_frame.profile)
+        depth_to_color_extrin = depth_frame.profile.get_extrinsics_to(
+            color_frame.profile)
         # 获取深度传感器的深度标尺
         depth_sensor = pipe_profile.get_device().first_depth_sensor()
         depth_scale = depth_sensor.get_depth_scale()  # 深度比例系数为： 0.0010000000474974513
@@ -105,10 +96,12 @@ def led_practice(x_axis, y_axis):
         # 由深度到颜色
         depth_pixel = [x_axis, y_axis]  # specified pixel
         # rs2_deproject_pixel_to_point获取实际空间坐标 specified point
-        depth_point = rs.rs2_deproject_pixel_to_point(depth_intrin, depth_pixel, depth_scale)
+        depth_point = rs.rs2_deproject_pixel_to_point(
+            depth_intrin, depth_pixel, depth_scale)
 #        print(depth_point)
         # perspective conversion
-        color_point = rs.rs2_transform_point_to_point(depth_to_color_extrin, depth_point)
+        color_point = rs.rs2_transform_point_to_point(
+            depth_to_color_extrin, depth_point)
         # 3D space to XY pixels
         color_pixel = rs.rs2_project_point_to_pixel(color_intrin, color_point)
 
@@ -119,20 +112,19 @@ def led_practice(x_axis, y_axis):
 
         i = W * y_axis + x_axis
 
-
-
         imgBGR = img_color.copy()
 
         cv2.circle(img_color, (x_axis, y_axis), 8, [255, 0, 255], thickness=-1)
 
-        
         cv2.putText(img_color, "Distance/cm:" + str(img_depth[x_axis, y_axis]/10), (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2,
                     [255, 0, 255])
-        cv2.putText(img_color, "X:" + str(np.float64(vtx[i][0])), (80, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
-        cv2.putText(img_color, "Y:" + str(np.float64(vtx[i][1])), (80, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
-        cv2.putText(img_color, "Z:" + str(np.float64(vtx[i][2])), (80, 160), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
+        cv2.putText(img_color, "X:" + str(np.float64(
+            vtx[i][0])), (80, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
+        cv2.putText(img_color, "Y:" + str(np.float64(
+            vtx[i][1])), (80, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
+        cv2.putText(img_color, "Z:" + str(np.float64(
+            vtx[i][2])), (80, 160), cv2.FONT_HERSHEY_SIMPLEX, 1, [255, 0, 255])
 
-        
         imgHSV = cv2.cvtColor(imgBGR, cv2.COLOR_BGR2HSV)
         cv2.imshow('hsv', imgHSV)
         lowHSV_1 = np.array([0, 43, 46])
@@ -145,11 +137,10 @@ def led_practice(x_axis, y_axis):
 
         mask = mask_0 + mask_1
 
-        imgMask = cv2.bitwise_and(imgBGR, imgBGR, mask=mask) # 按位与运算，仅保留HSV [0, 43, 46]~[10, 255, 255]&[156, 43, 46]~[180, 255, 255]
+        imgMask = cv2.bitwise_and(imgBGR, imgBGR, mask=mask)
         minDis = detect_circle_demo(imgMask, img_depth, imgBGR)
-        
-        plist = list(serial.tools.list_ports.comports())
 
+        plist = list(serial.tools.list_ports.comports())
 
         if len(plist) <= 0:
             print("The Serial port can't find!")
@@ -161,9 +152,7 @@ def led_practice(x_axis, y_axis):
             serialFd1 = serial.Serial(serialName1, 9600, timeout=0.5)
             serialFd2 = serial.Serial(serialName2, 9600, timeout=0.5)
         if minDis != None:
-            # print(minDis)
             writeBit = serialFd1.write((str(minDis)+'\n').encode())
-            # serialFd1.write((str(0)+'\n').encode())
             print(serialFd2.readline())
         else:
             serialFd1.write((str(0)+'\n').encode())
@@ -174,10 +163,6 @@ def led_practice(x_axis, y_axis):
 
         cv2.namedWindow("BGR", cv2.WINDOW_NORMAL)
         cv2.imshow('BGR', imgBGR)
-
-
-
-    
 
         key = cv2.waitKey(1)
         if key & 0xFF == ord("q"):
