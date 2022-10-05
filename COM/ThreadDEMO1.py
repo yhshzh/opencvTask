@@ -1,4 +1,4 @@
-from ast import arg
+import time
 import pyrealsense2 as rs
 import numpy as np
 import cv2
@@ -136,6 +136,7 @@ def getMask(_imgBGR):
 #             _serial1.write((str(0)+'\n').encode())
 #             print(_serial2.readline())
 def writeDis(_minDis, _serial1, _serial2):
+    t1 = time.time()
     if _serial2.readline()==('f'+'\n').encode():   
         if _minDis != None:
             _serial1.write((str('{:>4d}'.format(int(_minDis)))).encode())
@@ -143,6 +144,10 @@ def writeDis(_minDis, _serial1, _serial2):
         else:
             _serial1.write((str(0)).encode())
             print(_serial2.readline())
+    t2 = time.time()
+    print(t2-t1)
+
+    
 
 def getKey(_key, _serial):
     if _key&0xFF == ord("f"):
@@ -165,6 +170,7 @@ else:
 
 pipeline, align, pipe_profile, pc, points, cap = initCapture(W, H)
 while True:
+    t3 = time.time()
     imgColor, imgDepth = led_practice(int(W / 2), int(H / 2))
     imgBGR = imgColor.copy()
     mask = getMask(imgBGR)
@@ -187,7 +193,8 @@ while True:
 
     cv2.namedWindow("BGR", cv2.WINDOW_NORMAL)
     cv2.imshow('BGR', imgBGR)
-
+    t4 = time.time()
+    print(t4 - t3)
 
     if key & 0xFF == ord("q"):
         cv2.destroyAllWindows()

@@ -5,6 +5,7 @@ import cv2
 import serial
 import serial.tools.list_ports
 from threading import Thread
+from threading import Event
 
 
 def detect_circle_demo(image, img_depth, imgOut):
@@ -76,6 +77,9 @@ def initCapture(_W, _H):
 def led_practice(x_axis, y_axis, _key):
     pipeline, align, pipe_profile, pc, points, cap = initCapture(W, H)
     while True:
+        threadEvent.set()
+
+
         frames = pipeline.wait_for_frames()  # 等待开启通道,等到新的一组帧集可用为止
         aligned_frames = align.process(frames)  # 将深度框和颜色框对齐
         depth_frame = aligned_frames.get_depth_frame()  # ?获得对齐后的帧数深度数据(图)
@@ -150,13 +154,16 @@ def writeDis(_minDis, _serial1, _serial2):
     if _serial2.readline()==('f'+'\n').encode():   
         if _minDis != None:
             _serial1.write((str('{:>4d}'.format(int(_minDis)))).encode())
-            print(_serial2.read_all())
+            print(_serial2.readline())
         else:
             _serial1.write((str(0)).encode())
-            print(_serial2.read_all())
+            print(_serial2.readline())
 
 def getKey(_key, _serial):
+
     while True:
+        threadEvent.wait()
+        threadEvent.clear()
         if key[0]&0xFF == ord("f"):
             _serial.write(('f'+'\n').encode())  
             key[0] = -1
@@ -166,6 +173,8 @@ def getKey(_key, _serial):
 W = 640
 H = 480
 key = [cv2.waitKey(1)]
+t1 = [0]
+t2 = [0]
 plist = list(serial.tools.list_ports.comports())
 
 if len(plist) <= 0:
@@ -182,6 +191,7 @@ else:
 
 myThread_1 = Thread(target=led_practice, args=(int(W / 2), int(H / 2), key), name="Write")
 myThread_2 = Thread(target=getKey, args = (key, serialFd1), name="Get")
+threadEvent = Event()
 
 myThread_1.start()
 myThread_2.start()
